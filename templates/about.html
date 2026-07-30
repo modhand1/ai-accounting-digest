@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "macros.html" import arrow_icon %}
+
+{% block title %}Обо мне — 20 лет практики в бухгалтерии{% endblock %}
+{% block description %}Практикующий заместитель главного бухгалтера с 20-летним опытом: как я применяю ИИ в бухгалтерских задачах безопасно и с профессиональной проверкой.{% endblock %}
+{% block og_title %}Обо мне — ИИ × БУХГАЛТЕР{% endblock %}
+{% block og_description %}20 лет практики в бухгалтерии. Показываю, как применять ИИ без потери контроля, конфиденциальности и профессионального суждения.{% endblock %}
+{% block body_class %}about-page{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <div class="about-hero-copy" data-reveal>
+        <p class="section-signature">ОБО МНЕ</p>
+        <h1>20 лет в бухгалтерии.<br><em>ИИ — новый инструмент,</em><br>а ответственность остаётся у специалиста.</h1>
+        <p class="about-lead">
+            Я практикующий заместитель главного бухгалтера. Здесь показываю, как разбирать
+            бухгалтерские задачи, формулировать правила для ИИ и проверять результат —
+            без рабочих данных и обещаний «волшебной кнопки».
+        </p>
+        <div class="about-hero-actions">
+            <a class="button button-primary" href="{{ url_for('home') }}#materials">
+                Посмотреть материалы {{ arrow_icon() }}
+            </a>
+            <a class="text-link" href="#principles">Как я работаю ↓</a>
+        </div>
+    </div>
+
+    <figure class="about-portrait" data-reveal>
+        <img
+            src="{{ url_for('static', filename='images/about-practitioner-open.jpg') }}"
+            alt="Автор проекта «ИИ × БУХГАЛТЕР», практикующий заместитель главного бухгалтера"
+            width="1080"
+            height="1935"
+            fetchpriority="high"
+        >
+        <figcaption>
+            <div class="about-caption-experience">
+                <strong>20 лет</strong>
+                <small>профессионального опыта</small>
+            </div>
+            <span>Практик, не наблюдатель</span>
+        </figcaption>
+    </figure>
+</section>
+
+<section class="about-reason">
+    <div class="about-section-label">01 / ЗАЧЕМ ЭТОТ ПРОЕКТ</div>
+    <div class="about-reason-copy" data-reveal>
+        <h2>Чтобы бухгалтер мог использовать ИИ <em>осознанно,</em> а не наугад.</h2>
+        <div class="about-text-columns">
+            <p>
+                Я начала разбираться в ИИ не ради модного инструмента. Мне было важно понять,
+                где он действительно снимает рутину, а где создаёт новый риск: уверенно
+                формулирует ошибочный ответ, теряет условие или предлагает решение,
+                которое нельзя повторить.
+            </p>
+            <p>
+                Поэтому здесь не будет советов в духе «вставьте документ в чат и доверьтесь
+                результату». Я показываю весь рабочий путь: какую задачу мы решаем, какие
+                правила должен учесть ИИ, как проверить ответ и что всё равно остаётся
+                зоной ответственности бухгалтера.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="about-method" id="principles">
+    <div class="about-method-heading" data-reveal>
+        <p class="section-signature">МОЙ ПОДХОД</p>
+        <h2>Сначала — бухгалтерская логика.<br>Потом — <em>ИИ.</em></h2>
+        <p>
+            Хороший результат начинается не с длинного промпта, а с ясной постановки задачи
+            и критериев проверки.
+        </p>
+    </div>
+    <ol class="method-steps">
+        <li data-reveal>
+            <span>01</span>
+            <h3>Разбираю задачу</h3>
+            <p>Что приходит на вход, какой нужен результат и где бухгалтер принимает решение.</p>
+        </li>
+        <li data-reveal>
+            <span>02</span>
+            <h3>Формулирую правила</h3>
+            <p>Перевожу привычную профессиональную логику в понятные условия и ограничения.</p>
+        </li>
+        <li data-reveal>
+            <span>03</span>
+            <h3>Тестирую безопасно</h3>
+            <p>Использую синтетические примеры без реальных реквизитов, сумм и персональных данных.</p>
+        </li>
+        <li data-reveal>
+            <span>04</span>
+            <h3>Проверяю результат</h3>
+            <p>Сверяю ответ с контрольными правилами и фиксирую, где человеку нужен дополнительный контроль.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="about-principles">
+    <div class="about-section-label">02 / ЧТО ДЛЯ МЕНЯ ВАЖНО</div>
+    <div class="principles-grid">
+        <article data-reveal>
+            <span>ПРОФЕССИОНАЛЬНОЕ СУЖДЕНИЕ</span>
+            <h2>ИИ готовит.<br>Бухгалтер решает.</h2>
+            <p>
+                Инструмент может ускорить анализ и подготовить черновик, но не забирает у
+                специалиста ответственность за вывод.
+            </p>
+        </article>
+        <article data-reveal>
+            <span>КОНФИДЕНЦИАЛЬНОСТЬ</span>
+            <h2>Без рабочих файлов<br>в открытых сервисах.</h2>
+            <p>
+                В публичных примерах — только вымышленные данные. Реальные документы,
+                реквизиты и персональные сведения не нужны, чтобы проверить идею.
+            </p>
+        </article>
+        <article data-reveal>
+            <span>ВОСПРОИЗВОДИМОСТЬ</span>
+            <h2>Не удачный ответ,<br>а понятный процесс.</h2>
+            <p>
+                Ценность появляется, когда результат можно получить снова, проверить по
+                тем же правилам и объяснить коллеге.
+            </p>
+        </article>
+    </div>
+</section>
+
+<section class="about-experience">
+    <div class="experience-title" data-reveal>
+        <p class="section-signature">ПРАКТИЧЕСКИЙ ОПЫТ</p>
+        <h2>Рабочие задачи, которые я понимаю <em>изнутри.</em></h2>
+    </div>
+    <ul class="experience-list">
+        <li data-reveal><span>01</span><strong>Сверки и контрольные равенства</strong></li>
+        <li data-reveal><span>02</span><strong>Отчётность и налоговые задачи</strong></li>
+        <li data-reveal><span>03</span><strong>Повторяющиеся операции и регламенты</strong></li>
+        <li data-reveal><span>04</span><strong>Подготовка данных и проверка результата</strong></li>
+    </ul>
+    <p class="experience-note" data-reveal>
+        Я не обещаю, что ИИ решит любую задачу. Сначала определяю, можно ли её формализовать,
+        безопасно протестировать и объективно проверить.
+    </p>
+</section>
+
+<section class="about-cta" data-reveal>
+    <p>ЕСТЬ ПОВТОРЯЮЩАЯСЯ ЗАДАЧА?</p>
+    <h2>Начнём с её описания —<br><em>без файлов и реквизитов.</em></h2>
+    <div>
+        <a class="button button-primary" href="{{ url_for('home') }}#contact">
+            Описать задачу {{ arrow_icon() }}
+        </a>
+        <a class="button button-secondary" href="{{ url_for('home') }}#materials">
+            Читать материалы
+        </a>
+    </div>
+</section>
+{% endblock %}

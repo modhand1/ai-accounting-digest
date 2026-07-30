@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% from "macros.html" import arrow_icon, material_symbol %}
+
+{% block title %}ИИ для бухгалтера — без хаоса и риска{% endblock %}
+{% block body_class %}home-page{% endblock %}
+
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero-number" aria-hidden="true">01</div>
+    <div class="hero-copy" data-reveal>
+        <h1 id="hero-title">ИИ для бухгалтера —<br><em>без хаоса и риска</em></h1>
+        <p class="hero-lead">Разбираю рабочие задачи по шагам: от правила и безопасного примера до проверяемого результата.</p>
+        <div class="hero-actions">
+            <a class="button button-primary" href="#materials">
+                Начать с первого материала {{ arrow_icon() }}
+            </a>
+            <a class="button button-secondary" href="#contact">Обсудить мою задачу</a>
+        </div>
+        <p class="proof-line"><span></span>Практика • безопасность • профессиональный контроль</p>
+    </div>
+    <div class="hero-visual" data-reveal aria-hidden="true">
+        <img src="{{ url_for('static', filename='images/hero-audit-lens.webp') }}" alt="" width="1536" height="1024">
+    </div>
+</section>
+
+<section class="route-section" id="approach" aria-labelledby="route-title">
+    <div class="section-index">01</div>
+    <div class="route-intro" data-reveal>
+        <h2 id="route-title">Маршрут для новичка</h2>
+        <p>Пошаговый путь от первой задачи до уверенного применения ИИ в учёте и отчётности.</p>
+    </div>
+    <ol class="route-list">
+        <li data-reveal>
+            <span>01</span>
+            <h3>Понимаем задачу</h3>
+            <p>Формулируем цель, вводные и ожидаемый результат.</p>
+        </li>
+        <li data-reveal>
+            <span>02</span>
+            <h3>Выбираем подход</h3>
+            <p>Подбираем инструмент и метод под вашу ситуацию.</p>
+        </li>
+        <li data-reveal>
+            <span>03</span>
+            <h3>Проверяем результат</h3>
+            <p>Сверяем, документируем и только потом берём в работу.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="materials-section" id="materials" aria-labelledby="materials-title">
+    <div class="materials-heading" data-reveal>
+        <p class="section-signature">ИИ × БУХГАЛТЕР — ДАЙДЖЕСТ</p>
+        <h2 id="materials-title">С чего начать<br>работу с <em>ИИ</em></h2>
+        <p>Девять материалов — от первого безопасного шага до проверяемого процесса.</p>
+    </div>
+
+    <div class="materials-grid">
+        {% for item in materials %}
+        <article class="material-card card-{{ item.number }} {% if item.number in ['01', '08'] %}card-light{% endif %}" data-reveal>
+            <a class="card-stretched-link" href="{{ url_for('material', slug=item.slug) }}" aria-label="Открыть материал: {{ item.title }}"></a>
+            <div class="card-number">{{ item.number }}</div>
+            <div class="card-copy">
+                <p class="card-kind">{{ item.kind }}</p>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.description }}</p>
+                <span class="read-time">{{ item.read_time }}</span>
+            </div>
+            {{ material_symbol(item.number) }}
+            <div class="card-action">Открыть материал {{ arrow_icon() }}</div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <p class="materials-endline">
+        <span>Все материалы для начинающих</span>
+        <i></i><span>Практично</span><i></i><span>Безопасно</span><i></i><span>Проверяемо</span>
+    </p>
+</section>
+
+<section class="case-section" aria-labelledby="case-title">
+    <div class="case-panel" data-reveal>
+        <div>
+            <h2 id="case-title">Не обещаю магию.<br>Показываю <em>процесс.</em></h2>
+            <p>В одном обезличенном квартальном процессе подготовка и проверка занимали 3–4 часа. После формализации правил и контрольных равенств — 30–40 минут.</p>
+            <small>Результат одного кейса, а не обещание одинакового эффекта для всех.</small>
+        </div>
+        <div class="case-metric" aria-label="Сокращение времени с 3–4 часов до 30–40 минут">
+            <span><strong>3–4</strong>часа</span>
+            {{ arrow_icon() }}
+            <span><strong>30–40</strong>минут</span>
+        </div>
+    </div>
+</section>
+
+<section class="offers-section" aria-labelledby="offers-title">
+    <div class="section-index">02</div>
+    <h2 id="offers-title" data-reveal>Если задача повторяется —<br>её можно <em>разобрать</em></h2>
+    <div class="offers-grid">
+        <article data-reveal>
+            <span>01</span>
+            <h3>Разбор одной задачи</h3>
+            <p>Выделим правила и контрольные равенства, покажем, где теряется время и где появляется риск.</p>
+            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+        </article>
+        <article data-reveal>
+            <span>02</span>
+            <h3>Практикум для команды</h3>
+            <p>Научимся ставить задачи, проверять результат и документировать процесс на безопасных примерах.</p>
+            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+        </article>
+        <article data-reveal>
+            <span>03</span>
+            <h3>Настройка воспроизводимого процесса</h3>
+            <p>Соберём рабочую систему с инструкциями, тестами, исключениями и понятным контролем.</p>
+            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+        </article>
+    </div>
+</section>
+
+<section class="contact-section" id="contact" aria-labelledby="contact-title">
+    <div class="contact-copy" data-reveal>
+        <h2 id="contact-title">Начнём с задачи,<br>не с рабочих данных</h2>
+        <p>Опишите повторяющийся процесс обычными словами. Без файлов, реквизитов и конфиденциальных сведений.</p>
+        <div class="privacy-note" id="privacy">
+            <strong>!</strong>
+            <span>Не прикладывайте рабочие файлы<br>и персональные данные.</span>
+        </div>
+    </div>
+
+    <div class="contact-paper" data-reveal>
+        {% if sent %}
+        <div class="form-success" role="status">
+            <span>✓</span>
+            <h3>Описание сохранено</h3>
+            <p>Заявка записана локально в <code>data/requests.csv</code>. Можно перейти к материалам или отправить ещё одну задачу.</p>
+            <a class="button button-primary" href="#materials">Вернуться к материалам</a>
+        </div>
+        {% else %}
+        <form action="{{ url_for('save_request') }}" method="post">
+            {% if error %}
+            <p class="form-error" role="alert">{{ error }}</p>
+            {% endif %}
+            <label for="name">Имя</label>
+            <input id="name" name="name" type="text" maxlength="80" autocomplete="name" placeholder="Как к вам обращаться" required>
+
+            <label for="task">Какую задачу хотите разобрать?</label>
+            <textarea id="task" name="task" rows="5" minlength="20" maxlength="1500" placeholder="Опишите повторяющийся процесс обычными словами" required></textarea>
+            <p class="char-counter"><span data-counter>0</span> / 1500</p>
+
+            <label for="format">Формат</label>
+            <select id="format" name="format" required>
+                <option value="" selected disabled>Выберите формат</option>
+                <option>Разбор одной задачи</option>
+                <option>Практикум для команды</option>
+                <option>Настройка процесса</option>
+                <option>Пока не знаю</option>
+            </select>
+
+            <label class="checkbox-row">
+                <input type="checkbox" name="privacy" value="yes" required>
+                <span>Я не добавляю рабочие файлы, реквизиты и персональные данные.</span>
+            </label>
+
+            <button class="button button-primary" type="submit">
+                Отправить описание {{ arrow_icon() }}
+            </button>
+            <p class="form-hint"><strong>!</strong> Данные сохраняются локально на сервере сайта.</p>
+        </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

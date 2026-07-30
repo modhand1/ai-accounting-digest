@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0b0b">
+    <meta name="description" content="{% block description %}Практический AI-дайджест для бухгалтеров: безопасно, понятно и с профессиональной проверкой.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:site_name" content="ИИ × БУХГАЛТЕР">
+    <meta property="og:title" content="{% block og_title %}ИИ для бухгалтера — без хаоса и риска{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Практический AI-дайджест для бухгалтеров: безопасно, понятно и с профессиональной проверкой.{% endblock %}">
+    <meta name="twitter:card" content="summary">
+    <title>{% block title %}ИИ × БУХГАЛТЕР{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%230b0b0b%22/><text x=%2250%22 y=%2265%22 font-size=%2252%22 text-anchor=%22middle%22 fill=%22%23b8893e%22>×</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260729-4') }}">
+    <script src="{{ url_for('static', filename='js/main.js', v='20260729-4') }}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <a class="skip-link" href="#main">Перейти к содержанию</a>
+
+    {% block header %}
+    <header class="site-header" data-header>
+        <a class="brand" href="{{ url_for('home') }}" aria-label="ИИ × БУХГАЛТЕР — на главную">
+            <span>ИИ</span><b>×</b><span>БУХГАЛТЕР</span>
+        </a>
+
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
+            <span class="sr-only">Открыть меню</span>
+            <i></i><i></i>
+        </button>
+
+        <nav class="main-nav" id="main-nav" aria-label="Основная навигация">
+            <a href="{{ url_for('home') }}#materials">Материалы</a>
+            <a href="{{ url_for('home') }}#approach">О подходе</a>
+            <a href="{{ url_for('about') }}">Обо мне</a>
+            <a class="nav-cta" href="{{ url_for('home') }}#contact">Разбор задачи</a>
+        </nav>
+    </header>
+    {% endblock %}
+
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block footer %}
+    <footer class="site-footer">
+        <div class="brand" aria-label="ИИ × БУХГАЛТЕР">
+            <span>ИИ</span><b>×</b><span>БУХГАЛТЕР</span>
+        </div>
+        <nav aria-label="Навигация в подвале">
+            <a href="{{ url_for('home') }}#materials">Материалы</a>
+            <a href="{{ url_for('home') }}#approach">Подход</a>
+            <a href="{{ url_for('about') }}">Обо мне</a>
+            <a href="{{ url_for('home') }}#privacy">Конфиденциальность</a>
+        </nav>
+        <p>Правила задаёт бухгалтер.<br>Результат проверяет бухгалтер.</p>
+        <small>© 2026 ИИ × БУХГАЛТЕР</small>
+    </footer>
+    {% endblock %}
+</body>
+</html>

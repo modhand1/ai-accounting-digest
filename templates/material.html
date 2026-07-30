@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "macros.html" import arrow_icon %}
+
+{% block title %}{{ material.title }} — ИИ × БУХГАЛТЕР{% endblock %}
+{% block description %}{{ material.description }}{% endblock %}
+{% block body_class %}material-page{% endblock %}
+
+{% block content %}
+<div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+
+<article class="article">
+    <header class="article-hero">
+        <div class="article-number" aria-hidden="true">{{ material.number }}</div>
+        <div class="article-hero-copy" data-reveal>
+            <a class="back-link" href="{{ url_for('home') }}#materials">← Все материалы</a>
+            <p>{{ material.kind }} · {{ material.read_time }}</p>
+            <h1>{{ material.title }}</h1>
+            <p class="article-lead">{{ material.lead }}</p>
+            <a class="article-author" href="{{ url_for('about') }}">
+                <span aria-hidden="true">20</span>
+                <span><strong>Автор — практикующий заместитель главного бухгалтера</strong>20 лет в профессии</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="article-body">
+        <aside class="article-aside">
+            <span>Материал {{ material.number }} / 09</span>
+            <p>Практично.<br>Безопасно.<br>Проверяемо.</p>
+        </aside>
+
+        <div class="article-content">
+            {% for section in material.sections %}
+            <section data-reveal>
+                <span class="article-section-number">0{{ loop.index }}</span>
+                <h2>{{ section.heading }}</h2>
+                {% for paragraph in section.get("paragraphs", []) %}
+                <p>{{ paragraph }}</p>
+                {% endfor %}
+                {% if section.get("bullets") %}
+                <ul>
+                    {% for bullet in section.bullets %}
+                    <li>{{ bullet }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </section>
+            {% endfor %}
+
+            <section class="article-action" data-reveal>
+                <p>Сделайте сейчас</p>
+                <h2>{{ material.action }}</h2>
+            </section>
+        </div>
+    </div>
+
+    <footer class="next-material">
+        <div>
+            <p>Следующий материал / {{ next_material.number }}</p>
+            <h2>{{ next_material.title }}</h2>
+        </div>
+        <a class="button button-primary" href="{{ url_for('material', slug=next_material.slug) }}">
+            Открыть материал {{ arrow_icon() }}
+        </a>
+    </footer>
+</article>
+{% endblock %}
