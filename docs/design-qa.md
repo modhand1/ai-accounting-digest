@@ -2,11 +2,11 @@
 
 ## Источники и состояние
 
-- Визуальный эталон: `C:\Users\Morozova\.codex\generated_images\019fada5-592e-7310-994e-eac3a5a2f607\call_HULRyYp4gIw0Qh8vcg4xwYHo.png`
-- Реализация, desktop: `C:\Users\Morozova\Documents\Промпт инженеринг\design_refs\07-audit-lens-desktop.png`
-- Реализация, mobile: `C:\Users\Morozova\Documents\Промпт инженеринг\design_refs\08-audit-lens-mobile.png`
-- Полное сравнение в одном изображении: `C:\Users\Morozova\Documents\Промпт инженеринг\design_refs\09-audit-lens-qa-comparison.png`
-- Фокусное сравнение hero-объекта: `C:\Users\Morozova\Documents\Промпт инженеринг\design_refs\10-audit-lens-qa-focus.png`
+- Визуальный эталон: артефакт генерации `019fada5-592e-7310-994e-eac3a5a2f607/call_HULRyYp4gIw0Qh8vcg4xwYHo.png` (в репозиторий не включён).
+- Реализация, desktop: `design_refs/07-audit-lens-desktop.png`.
+- Реализация, mobile: `design_refs/08-audit-lens-mobile.png`.
+- Полное сравнение в одном изображении: `design_refs/09-audit-lens-qa-comparison.png`.
+- Фокусное сравнение hero-объекта: `design_refs/10-audit-lens-qa-focus.png`.
 - Состояние: главная страница, верх страницы, тёмная тема, анимация появления завершена.
 - CSS viewport desktop: `1440 × 1024`, device scale factor `1`.
 - Исходный макет: `1505 × 1045 px`.
