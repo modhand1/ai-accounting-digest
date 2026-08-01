@@ -10,6 +10,12 @@ VALIDATOR = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(VALIDATOR)
 
+EXPORTER_PATH = Path(__file__).parent / "tools" / "export_shared_knowledge_package.py"
+EXPORTER_SPEC = importlib.util.spec_from_file_location("package_exporter", EXPORTER_PATH)
+EXPORTER = importlib.util.module_from_spec(EXPORTER_SPEC)
+assert EXPORTER_SPEC and EXPORTER_SPEC.loader
+EXPORTER_SPEC.loader.exec_module(EXPORTER)
+
 
 def document(**overrides: str) -> str:
     values = {
@@ -31,6 +37,10 @@ def document(**overrides: str) -> str:
 
 
 class SharedKnowledgePackageValidatorTests(unittest.TestCase):
+    def test_exporter_accepts_public_and_local_title_schemas(self):
+        self.assertEqual("Публичный заголовок", EXPORTER.material_title({"title": "Публичный заголовок"}))
+        self.assertEqual("Локальный заголовок", EXPORTER.material_title({"headline": "Локальный заголовок"}))
+
     def test_valid_document_passes(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "article.md"

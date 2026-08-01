@@ -24,6 +24,7 @@ from content import MATERIALS  # noqa: E402
 CANONICAL_REPOSITORY = "https://github.com/modhand1/ai-accounting-digest"
 EXPORT_DATE = date.today().isoformat()
 PACKAGE_ID = f"SITE-AI-ACCOUNTING-{EXPORT_DATE}"
+EXPECTED_ARTICLE_NUMBERS = {f"{number:02d}" for number in range(1, 11)}
 
 # Файлы, наличие которых было подтверждено в публичной ветке main. Остальные
 # локальные исследования и черновики не публикуются и ссылаются только на
@@ -274,19 +275,52 @@ def remove_absolute_user_paths(text: str) -> str:
     return UNIX_USER_PREFIX.sub("", text)
 
 
+def material_title(material: dict) -> str:
+    """Поддерживает публичную схему `title` и локальную схему `headline`."""
+    title = material.get("headline") or material.get("title")
+    if not title:
+        raise ValueError(
+            f"У материала {material.get('number', '?')} нет поля title или headline."
+        )
+    return str(title)
+
+
+def source_problems() -> list[str]:
+    """Проверяет полный набор приватных и публичных исходников до записи файлов."""
+    problems: list[str] = []
+    article_numbers = [str(material.get("number", "")) for material in MATERIALS]
+    available_numbers = set(article_numbers)
+    missing_numbers = sorted(EXPECTED_ARTICLE_NUMBERS - available_numbers)
+    unexpected_numbers = sorted(available_numbers - EXPECTED_ARTICLE_NUMBERS)
+    if missing_numbers:
+        problems.append("нет материалов сайта: " + ", ".join(missing_numbers))
+    if unexpected_numbers:
+        problems.append("неожиданные номера материалов: " + ", ".join(unexpected_numbers))
+    if len(article_numbers) != len(available_numbers):
+        problems.append("обнаружены повторяющиеся номера материалов")
+
+    for documents in PACKAGE_SECTIONS.values():
+        for spec in documents:
+            relative_path = str(spec["path"])
+            if not (PROJECT_ROOT / relative_path).is_file():
+                problems.append(f"отсутствует исходный файл: {relative_path}")
+    return problems
+
+
 def render_article(material: dict) -> str:
     number = material["number"]
+    title = material_title(material)
     frontmatter = make_frontmatter(
         role="article",
         source_type="github",
         canonical_path=ARTICLE_CANONICAL_PATHS[number],
         freshness_sensitive=number in FRESHNESS_SENSITIVE_ARTICLES,
-        title=material["headline"],
+        title=title,
     )
     lines = [
         frontmatter,
         "",
-        f"# {material['headline']}",
+        f"# {title}",
         "",
         f"**Формат:** {material['kind']} · {material['read_time']}",
         "",
@@ -376,7 +410,8 @@ def render_support_document(spec: dict[str, object]) -> str:
 
 def write_manifest(destination: Path) -> None:
     article_list = "\n".join(
-        f"- {item['number']}. {item['headline']} (`{item['slug']}`)" for item in MATERIALS
+        f"- {item['number']}. {material_title(item)} (`{item['slug']}`)"
+        for item in MATERIALS
     )
     frontmatter = make_frontmatter(
         role="passport",
@@ -426,6 +461,13 @@ def write_manifest(destination: Path) -> None:
 def export(destination: Path) -> None:
     if destination.exists() and any(destination.iterdir()):
         raise SystemExit(f"Папка уже существует и не пуста: {destination}")
+    problems = source_problems()
+    if problems:
+        details = "\n".join(f"- {problem}" for problem in problems)
+        raise SystemExit(
+            "Исходники пакета неполны; экспорт не начат. Восстановите приватные "
+            "файлы из резервной копии и повторите запуск:\n" + details
+        )
     destination.mkdir(parents=True, exist_ok=True)
     articles_dir = destination / "01_МАТЕРИАЛЫ_САЙТА"
     articles_dir.mkdir(exist_ok=True)
