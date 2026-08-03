@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).parent
@@ -62,25 +63,30 @@ class BackupToolsTests(unittest.TestCase):
             destination = root / "drive-backups"
             moment = datetime(2026, 8, 3, 12, 0, tzinfo=timezone.utc)
 
-            result = BACKUP.create_backup(
-                repo=repo,
-                destination=destination,
-                git_executable=self.git,
-                now=moment,
-            )
+            with mock.patch.object(
+                BACKUP,
+                "read_public_remote_url",
+                return_value=str(root / "remote.git"),
+            ):
+                result = BACKUP.create_backup(
+                    repo=repo,
+                    destination=destination,
+                    git_executable=self.git,
+                    now=moment,
+                )
 
-            self.assertEqual("created", result["status"])
-            archive = Path(result["archive_directory"])
-            self.assertTrue((archive / "SHA256SUMS.txt").is_file())
-            verified = RESTORE.verify_archive(archive, git_executable=self.git)
-            self.assertEqual(result["commit_sha"], verified["commit_sha"])
+                self.assertEqual("created", result["status"])
+                archive = Path(result["archive_directory"])
+                self.assertTrue((archive / "SHA256SUMS.txt").is_file())
+                verified = RESTORE.verify_archive(archive, git_executable=self.git)
+                self.assertEqual(result["commit_sha"], verified["commit_sha"])
 
-            duplicate = BACKUP.create_backup(
-                repo=repo,
-                destination=destination,
-                git_executable=self.git,
-                now=moment,
-            )
+                duplicate = BACKUP.create_backup(
+                    repo=repo,
+                    destination=destination,
+                    git_executable=self.git,
+                    now=moment,
+                )
             self.assertEqual("unchanged", duplicate["status"])
 
     def test_destination_inside_repository_is_rejected(self):
@@ -99,6 +105,69 @@ class BackupToolsTests(unittest.TestCase):
     def test_scp_style_remote_user_is_removed(self):
         value = BACKUP.safe_remote_url("secret-user@example.invalid:project.git")
         self.assertEqual("example.invalid:project.git", value)
+
+    def test_portable_git_uses_https_helper_without_credentials(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            executable = root / "portable-git" / "cmd" / "git.exe"
+            helper = root / "portable-git" / "mingw64" / "bin" / "git-remote-https.exe"
+            executable.parent.mkdir(parents=True)
+            helper.parent.mkdir(parents=True)
+            executable.touch()
+            helper.touch()
+
+            command = BACKUP.git_command(
+                str(executable), "fetch", "origin", "main"
+            )
+
+            self.assertIn(f"--exec-path={helper.parent}", command)
+            self.assertIn("credential.helper=", command)
+            self.assertFalse(any("safe.directory=" in item for item in command))
+            self.assertEqual(["fetch", "origin", "main"], command[-3:])
+
+    def test_untrusted_transport_remote_is_rejected_before_git_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "source"
+            repo.mkdir()
+            self.git_run(repo, "init", "--initial-branch=main")
+            self.git_run(
+                repo,
+                "remote",
+                "add",
+                "origin",
+                "ssh://example.invalid/repository.git",
+            )
+
+            with self.assertRaisesRegex(ValueError, "HTTPS"):
+                BACKUP.read_public_remote_url(repo, "origin")
+
+    def test_local_remote_is_rejected_before_git_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = root / "source"
+            local_remote = root / "remote.git"
+            repo.mkdir()
+            local_remote.mkdir()
+            self.git_run(repo, "init", "--initial-branch=main")
+            self.git_run(repo, "remote", "add", "origin", str(local_remote))
+
+            with self.assertRaisesRegex(ValueError, "HTTPS"):
+                BACKUP.read_public_remote_url(repo, "origin")
+
+    def test_git_environment_ignores_system_and_user_config(self):
+        with mock.patch.dict(
+            BACKUP.os.environ,
+            {
+                "GIT_CONFIG_COUNT": "1",
+                "GIT_PROXY_COMMAND": "untrusted-command",
+            },
+        ):
+            environment = BACKUP.git_environment()
+        self.assertEqual("1", environment["GIT_CONFIG_NOSYSTEM"])
+        self.assertEqual(BACKUP.os.devnull, environment["GIT_CONFIG_GLOBAL"])
+        self.assertEqual("0", environment["GIT_TERMINAL_PROMPT"])
+        self.assertNotIn("GIT_CONFIG_COUNT", environment)
+        self.assertNotIn("GIT_PROXY_COMMAND", environment)
 
     def test_cli_rejects_source_ref_and_no_fetch_overrides(self):
         parser = BACKUP.build_parser()
