@@ -1,5 +1,6 @@
 """Небольшие проверки основных страниц и формы."""
 
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -95,6 +96,29 @@ class SiteTestCase(unittest.TestCase):
         saved_text = app_module.REQUESTS_FILE.read_text(encoding="utf-8-sig")
         self.assertIn("Проблема", saved_text)
         self.assertNotIn("Имя", saved_text)
+
+    def test_request_text_cannot_become_csv_formula(self):
+        response = self.client.post(
+            "/request",
+            data={
+                "problem": "=WEBSERVICE(\"https://example.invalid\") и комментарий",
+                "current_process": "Вручную открываю две таблицы и сравниваю строки.",
+                "desired_result": "Получить понятный порядок проверки расхождений.",
+                "data_used": "Две обезличенные таблицы и итоговый отчёт.",
+                "frequency": "Раз в месяц",
+                "current_check": "Сверяю итоговые суммы и несколько строк выборочно.",
+                "privacy": "yes",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        with app_module.REQUESTS_FILE.open(
+            newline="", encoding="utf-8-sig"
+        ) as csv_file:
+            rows = list(csv.reader(csv_file))
+
+        self.assertTrue(rows[1][1].startswith("'="))
+        self.assertFalse(rows[1][1].startswith("="))
 
 
 if __name__ == "__main__":

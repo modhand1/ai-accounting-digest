@@ -26,6 +26,14 @@ REQUESTS_FILE = Path(
 )
 
 
+def safe_csv_cell(value: str) -> str:
+    """Не позволяет пользовательскому тексту стать формулой в таблице."""
+    formula_prefixes = ("=", "+", "-", "@", "\t", "\r")
+    if value.lstrip().startswith(formula_prefixes):
+        return "'" + value
+    return value
+
+
 @app.after_request
 def add_security_headers(response):
     """Добавляет базовые защитные заголовки ко всем ответам сайта."""
@@ -138,12 +146,12 @@ def save_request():
         writer.writerow(
             [
                 datetime.now().isoformat(timespec="minutes"),
-                problem,
-                current_process,
-                desired_result,
-                data_used,
-                frequency,
-                current_check,
+                safe_csv_cell(problem),
+                safe_csv_cell(current_process),
+                safe_csv_cell(desired_result),
+                safe_csv_cell(data_used),
+                safe_csv_cell(frequency),
+                safe_csv_cell(current_check),
             ]
         )
 
