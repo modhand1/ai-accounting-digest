@@ -34,13 +34,19 @@ class PublicRepositoryCheckTests(unittest.TestCase):
     def test_real_user_path_is_rejected(self):
         errors = self.validate(
             "docs/audit.md",
-            r"C:\Users\Person\secret.txt",  # public-scan: allow
+            "C:\\" + "Users\\Person\\secret.txt",
         )
         self.assertTrue(any("пользовательский путь" in error for error in errors))
 
     def test_token_is_rejected(self):
         token = "ghp_" + "A" * 36
         errors = self.validate("config.txt", token)
+        self.assertTrue(any("токен GitHub" in error for error in errors))
+
+    def test_marker_does_not_bypass_token_check(self):
+        token = "ghp_" + "A" * 36
+        marker = "public-scan" + ": allow"
+        errors = self.validate("config.txt", f"{token}  # {marker}")
         self.assertTrue(any("токен GitHub" in error for error in errors))
 
 
