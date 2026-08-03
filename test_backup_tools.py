@@ -110,15 +110,36 @@ class BackupToolsTests(unittest.TestCase):
             executable.touch()
             helper.touch()
 
-            repository = root / "source"
             command = BACKUP.git_command(
-                str(executable), repository, "fetch", "origin", "main"
+                str(executable), "fetch", "origin", "main"
             )
 
             self.assertIn(f"--exec-path={helper.parent}", command)
             self.assertIn("credential.helper=", command)
-            self.assertIn(f"safe.directory={repository.resolve()}", command)
+            self.assertFalse(any("safe.directory=" in item for item in command))
             self.assertEqual(["fetch", "origin", "main"], command[-3:])
+
+    def test_untrusted_transport_remote_is_rejected_before_git_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "source"
+            repo.mkdir()
+            self.git_run(repo, "init", "--initial-branch=main")
+            self.git_run(
+                repo,
+                "remote",
+                "add",
+                "origin",
+                "ssh://example.invalid/repository.git",
+            )
+
+            with self.assertRaisesRegex(ValueError, "HTTPS"):
+                BACKUP.read_public_remote_url(repo, "origin")
+
+    def test_git_environment_ignores_system_and_user_config(self):
+        environment = BACKUP.git_environment()
+        self.assertEqual("1", environment["GIT_CONFIG_NOSYSTEM"])
+        self.assertEqual(BACKUP.os.devnull, environment["GIT_CONFIG_GLOBAL"])
+        self.assertEqual("0", environment["GIT_TERMINAL_PROMPT"])
 
     def test_cli_rejects_source_ref_and_no_fetch_overrides(self):
         parser = BACKUP.build_parser()
