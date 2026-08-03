@@ -42,6 +42,8 @@ class BackupToolsTests(unittest.TestCase):
 
     def make_repository(self, root: Path) -> Path:
         repo = root / "source"
+        remote = root / "remote.git"
+        self.git_run(root, "init", "--bare", "--initial-branch=main", str(remote))
         repo.mkdir()
         self.git_run(repo, "init", "--initial-branch=main")
         self.git_run(repo, "config", "user.name", "Backup Test")
@@ -49,7 +51,8 @@ class BackupToolsTests(unittest.TestCase):
         (repo / "README.md").write_text("Проверка восстановления\n", encoding="utf-8")
         self.git_run(repo, "add", "README.md")
         self.git_run(repo, "commit", "-m", "Initial test")
-        self.git_run(repo, "remote", "add", "origin", "https://example.invalid/project.git")
+        self.git_run(repo, "remote", "add", "origin", str(remote))
+        self.git_run(repo, "push", "--set-upstream", "origin", "main")
         return repo
 
     def test_backup_is_created_verified_and_not_duplicated(self):
@@ -63,8 +66,6 @@ class BackupToolsTests(unittest.TestCase):
                 repo=repo,
                 destination=destination,
                 git_executable=self.git,
-                source_ref="refs/heads/main",
-                fetch=False,
                 now=moment,
             )
 
@@ -78,8 +79,6 @@ class BackupToolsTests(unittest.TestCase):
                 repo=repo,
                 destination=destination,
                 git_executable=self.git,
-                source_ref="refs/heads/main",
-                fetch=False,
                 now=moment,
             )
             self.assertEqual("unchanged", duplicate["status"])
@@ -89,6 +88,26 @@ class BackupToolsTests(unittest.TestCase):
             repo = self.make_repository(Path(tmp))
             with self.assertRaises(ValueError):
                 BACKUP.assert_safe_locations(repo.resolve(), (repo / "backups").resolve())
+
+    def test_remote_url_credentials_query_and_fragment_are_removed(self):
+        value = BACKUP.safe_remote_url(
+            "https://user:password@example.invalid/project.git"
+            "?access_token=query-secret#fragment-secret"
+        )
+        self.assertEqual("https://example.invalid/project.git", value)
+
+    def test_scp_style_remote_user_is_removed(self):
+        value = BACKUP.safe_remote_url("secret-user@example.invalid:project.git")
+        self.assertEqual("example.invalid:project.git", value)
+
+    def test_cli_rejects_source_ref_and_no_fetch_overrides(self):
+        parser = BACKUP.build_parser()
+        for forbidden_argument in ("--source-ref", "--no-fetch"):
+            with self.subTest(forbidden_argument=forbidden_argument):
+                with self.assertRaises(SystemExit):
+                    parser.parse_args(
+                        ["--destination", "backup", forbidden_argument]
+                    )
 
 
 if __name__ == "__main__":
