@@ -100,6 +100,26 @@ class BackupToolsTests(unittest.TestCase):
         value = BACKUP.safe_remote_url("secret-user@example.invalid:project.git")
         self.assertEqual("example.invalid:project.git", value)
 
+    def test_portable_git_uses_https_helper_without_credentials(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            executable = root / "portable-git" / "cmd" / "git.exe"
+            helper = root / "portable-git" / "mingw64" / "bin" / "git-remote-https.exe"
+            executable.parent.mkdir(parents=True)
+            helper.parent.mkdir(parents=True)
+            executable.touch()
+            helper.touch()
+
+            repository = root / "source"
+            command = BACKUP.git_command(
+                str(executable), repository, "fetch", "origin", "main"
+            )
+
+            self.assertIn(f"--exec-path={helper.parent}", command)
+            self.assertIn("credential.helper=", command)
+            self.assertIn(f"safe.directory={repository.resolve()}", command)
+            self.assertEqual(["fetch", "origin", "main"], command[-3:])
+
     def test_cli_rejects_source_ref_and_no_fetch_overrides(self):
         parser = BACKUP.build_parser()
         for forbidden_argument in ("--source-ref", "--no-fetch"):
