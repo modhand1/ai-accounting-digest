@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import configparser
 import hashlib
 import json
 import os
@@ -20,6 +21,19 @@ PROJECT_NAME = "ai-accounting-digest"
 STATE_FILENAME = ".backup-state.json"
 
 
+def git_environment() -> dict[str, str]:
+    """Не позволяет внешним Git-конфигам менять поведение резервной копии."""
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
+    return environment
+
+
 def run(command: list[str], *, cwd: Path) -> str:
     result = subprocess.run(
         command,
@@ -29,11 +43,12 @@ def run(command: list[str], *, cwd: Path) -> str:
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=git_environment(),
     )
     return result.stdout.strip()
 
 
-def git_command(git_executable: str, repo: Path, *arguments: str) -> list[str]:
+def git_command(git_executable: str, *arguments: str) -> list[str]:
     """Собирает автономную команду Git без обращения к хранилищу учётных данных."""
     command = [git_executable]
     executable = Path(git_executable)
@@ -52,8 +67,6 @@ def git_command(git_executable: str, repo: Path, *arguments: str) -> list[str]:
             "http.sslBackend=openssl",
             "-c",
             "credential.helper=",
-            "-c",
-            f"safe.directory={repo.resolve()}",
             *arguments,
         ]
     )
@@ -61,7 +74,65 @@ def git_command(git_executable: str, repo: Path, *arguments: str) -> list[str]:
 
 
 def git(git_executable: str, repo: Path, *arguments: str) -> str:
-    return run(git_command(git_executable, repo, *arguments), cwd=repo)
+    return run(git_command(git_executable, *arguments), cwd=repo)
+
+
+def validate_ref_name(value: str, *, label: str) -> str:
+    if (
+        not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", value)
+        or ".." in value
+        or "//" in value
+        or "@{" in value
+        or value.endswith(("/", "."))
+    ):
+        raise ValueError(f"Некорректное имя {label}: {value}")
+    return value
+
+
+def read_public_remote_url(repo: Path, remote: str) -> str:
+    """Читает только URL из локального конфига, не запуская Git в чужой папке."""
+    remote = validate_ref_name(remote, label="remote")
+    config_path = repo / ".git" / "config"
+    if not config_path.is_file():
+        raise ValueError(f"Не найден Git-конфиг: {config_path}")
+
+    parser = configparser.RawConfigParser(interpolation=None, strict=False)
+    try:
+        with config_path.open("r", encoding="utf-8") as source:
+            parser.read_file(source)
+    except (OSError, configparser.Error) as exc:
+        raise ValueError("Не удалось безопасно прочитать Git-конфиг") from exc
+
+    section = f'remote "{remote}"'
+    url = parser.get(section, "url", fallback="").strip()
+    if not url or any(character in url for character in "\r\n\0"):
+        raise ValueError(f"Не найден безопасный URL remote {remote}")
+
+    if re.match(r"^[A-Za-z]:[\\/]", url) or url.startswith(("/", "\\\\")):
+        local_path = Path(url).resolve()
+        if not local_path.exists():
+            raise ValueError("Локальный Git-источник не существует")
+        return str(local_path)
+
+    parts = urlsplit(url)
+    if parts.scheme == "file":
+        if parts.username or parts.password or parts.query or parts.fragment:
+            raise ValueError("Локальный Git URL содержит лишние данные")
+        return url
+    if parts.scheme != "https" or not parts.hostname:
+        raise ValueError("Для резервной копии разрешён только публичный HTTPS remote")
+    if parts.username or parts.password or parts.query or parts.fragment:
+        raise ValueError("Remote URL не должен содержать учётные данные или параметры")
+    return url
+
+
+def create_trusted_repository(git_executable: str, root: Path) -> Path:
+    trusted_repo = root / "trusted.git"
+    run(
+        git_command(git_executable, "init", "--bare", str(trusted_repo)),
+        cwd=root,
+    )
+    return trusted_repo
 
 
 def sha256(path: Path) -> str:
@@ -156,57 +227,68 @@ def create_backup(
     repo = repo.resolve()
     destination = destination.resolve()
     assert_safe_locations(repo, destination)
+    branch = validate_ref_name(branch, label="branch")
+    remote = validate_ref_name(remote, label="remote")
+    remote_url = read_public_remote_url(repo, remote)
     destination.mkdir(parents=True, exist_ok=True)
 
-    git(git_executable, repo, "fetch", "--prune", remote, branch)
-
-    ref = f"refs/remotes/{remote}/{branch}"
-    commit_sha = git(git_executable, repo, "rev-parse", "--verify", ref)
-    if not re.fullmatch(r"[0-9a-f]{40,64}", commit_sha):
-        raise RuntimeError("Git вернул неожиданный идентификатор коммита")
-
-    state = read_state(destination)
-    if not force and state.get("last_commit_sha") == commit_sha:
-        return {
-            "status": "unchanged",
-            "commit_sha": commit_sha,
-            "archive_directory": state.get("archive_directory", ""),
-        }
-
-    created_at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    short_sha = commit_sha[:7]
-    folder_name = f"{created_at:%Y-%m-%d_%H%M%S}_{short_sha}"
-    final_directory = destination / f"{created_at:%Y}" / f"{created_at:%m}" / folder_name
-    if final_directory.exists():
-        verify_package(final_directory, git_executable=git_executable, repo=repo)
-        write_state(
-            destination,
-            {
-                "last_commit_sha": commit_sha,
-                "archive_directory": str(final_directory),
-                "verified_at_utc": created_at.isoformat(),
-            },
-        )
-        return {
-            "status": "existing_verified",
-            "commit_sha": commit_sha,
-            "archive_directory": str(final_directory),
-        }
-
-    remote_url = safe_remote_url(git(git_executable, repo, "remote", "get-url", remote))
-    commit_time = git(git_executable, repo, "show", "-s", "--format=%cI", commit_sha)
-    bundle_name = f"{PROJECT_NAME}_{short_sha}.bundle"
-    snapshot_name = f"{PROJECT_NAME}_{short_sha}.zip"
-
     with tempfile.TemporaryDirectory(prefix=f"{PROJECT_NAME}-backup-") as temporary:
-        staging = Path(temporary)
+        temporary_root = Path(temporary)
+        trusted_repo = create_trusted_repository(git_executable, temporary_root)
+        ref = f"refs/remotes/{remote}/{branch}"
+        git(
+            git_executable,
+            trusted_repo,
+            "fetch",
+            "--prune",
+            remote_url,
+            f"+refs/heads/{branch}:{ref}",
+        )
+
+        commit_sha = git(git_executable, trusted_repo, "rev-parse", "--verify", ref)
+        if not re.fullmatch(r"[0-9a-f]{40,64}", commit_sha):
+            raise RuntimeError("Git вернул неожиданный идентификатор коммита")
+
+        state = read_state(destination)
+        if not force and state.get("last_commit_sha") == commit_sha:
+            return {
+                "status": "unchanged",
+                "commit_sha": commit_sha,
+                "archive_directory": state.get("archive_directory", ""),
+            }
+
+        created_at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+        short_sha = commit_sha[:7]
+        folder_name = f"{created_at:%Y-%m-%d_%H%M%S}_{short_sha}"
+        final_directory = destination / f"{created_at:%Y}" / f"{created_at:%m}" / folder_name
+        if final_directory.exists():
+            verify_package(final_directory, git_executable=git_executable, repo=trusted_repo)
+            write_state(
+                destination,
+                {
+                    "last_commit_sha": commit_sha,
+                    "archive_directory": str(final_directory),
+                    "verified_at_utc": created_at.isoformat(),
+                },
+            )
+            return {
+                "status": "existing_verified",
+                "commit_sha": commit_sha,
+                "archive_directory": str(final_directory),
+            }
+
+        commit_time = git(git_executable, trusted_repo, "show", "-s", "--format=%cI", commit_sha)
+        bundle_name = f"{PROJECT_NAME}_{short_sha}.bundle"
+        snapshot_name = f"{PROJECT_NAME}_{short_sha}.zip"
+        staging = temporary_root / "package"
+        staging.mkdir()
         bundle_path = staging / bundle_name
         snapshot_path = staging / snapshot_name
 
-        git(git_executable, repo, "bundle", "create", str(bundle_path), ref)
+        git(git_executable, trusted_repo, "bundle", "create", str(bundle_path), ref)
         git(
             git_executable,
-            repo,
+            trusted_repo,
             "archive",
             "--format=zip",
             f"--output={snapshot_path}",
@@ -260,14 +342,14 @@ def create_backup(
             for filename in checksummed
         )
         (staging / "SHA256SUMS.txt").write_text(checksum_text, encoding="utf-8")
-        verify_package(staging, git_executable=git_executable, repo=repo)
+        verify_package(staging, git_executable=git_executable, repo=trusted_repo)
 
         pending = final_directory.with_name(final_directory.name + ".partial")
         if pending.exists():
             raise RuntimeError(f"Осталась незавершённая копия: {pending}")
         pending.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(staging, pending)
-        verify_package(pending, git_executable=git_executable, repo=repo)
+        verify_package(pending, git_executable=git_executable, repo=trusted_repo)
         pending.rename(final_directory)
 
     state = {
