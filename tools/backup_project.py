@@ -33,11 +33,35 @@ def run(command: list[str], *, cwd: Path) -> str:
     return result.stdout.strip()
 
 
-def git(git_executable: str, repo: Path, *arguments: str) -> str:
-    return run(
-        [git_executable, "-c", "http.sslBackend=openssl", *arguments],
-        cwd=repo,
+def git_command(git_executable: str, repo: Path, *arguments: str) -> list[str]:
+    """Собирает автономную команду Git без обращения к хранилищу учётных данных."""
+    command = [git_executable]
+    executable = Path(git_executable)
+    if executable.is_file():
+        helper_candidates = (
+            executable.parent,
+            executable.parent.parent / "mingw64" / "bin",
+        )
+        for candidate in helper_candidates:
+            if (candidate / "git-remote-https.exe").is_file():
+                command.append(f"--exec-path={candidate}")
+                break
+    command.extend(
+        [
+            "-c",
+            "http.sslBackend=openssl",
+            "-c",
+            "credential.helper=",
+            "-c",
+            f"safe.directory={repo.resolve()}",
+            *arguments,
+        ]
     )
+    return command
+
+
+def git(git_executable: str, repo: Path, *arguments: str) -> str:
+    return run(git_command(git_executable, repo, *arguments), cwd=repo)
 
 
 def sha256(path: Path) -> str:
