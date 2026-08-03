@@ -1,0 +1,50 @@
+name: Public safety and tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-safety-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Public safety and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Check public repository boundaries
+        run: python tools/check_public_repo.py
+
+      - name: Compile Python files
+        run: >-
+          python -m py_compile
+          app.py content.py materials_advanced.py materials_course.py
+          test_app.py test_backup_tools.py test_public_repo_check.py
+          test_shared_knowledge_package.py
+          tools/check_public_repo.py tools/backup_project.py
+          tools/restore_backup.py
+
+      - name: Run tests
+        run: python -m unittest discover -v
