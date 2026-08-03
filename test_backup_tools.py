@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).parent
@@ -136,10 +137,19 @@ class BackupToolsTests(unittest.TestCase):
                 BACKUP.read_public_remote_url(repo, "origin")
 
     def test_git_environment_ignores_system_and_user_config(self):
-        environment = BACKUP.git_environment()
+        with mock.patch.dict(
+            BACKUP.os.environ,
+            {
+                "GIT_CONFIG_COUNT": "1",
+                "GIT_PROXY_COMMAND": "untrusted-command",
+            },
+        ):
+            environment = BACKUP.git_environment()
         self.assertEqual("1", environment["GIT_CONFIG_NOSYSTEM"])
         self.assertEqual(BACKUP.os.devnull, environment["GIT_CONFIG_GLOBAL"])
         self.assertEqual("0", environment["GIT_TERMINAL_PROMPT"])
+        self.assertNotIn("GIT_CONFIG_COUNT", environment)
+        self.assertNotIn("GIT_PROXY_COMMAND", environment)
 
     def test_cli_rejects_source_ref_and_no_fetch_overrides(self):
         parser = BACKUP.build_parser()
