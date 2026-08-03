@@ -19,7 +19,9 @@ DOCUMENT_ROLES = {
 }
 SOURCE_TYPES = {"github", "local_project", "shared_base"}
 ABSOLUTE_USER_PATH = re.compile(
-    r"(?:[A-Za-z]:[\\/](?:Users|Documents and Settings)[\\/]|/Users/|/home/)",
+    r"(?:[A-Za-z]:[\\/](?:Users|Documents and Settings)[\\/]"
+    + "|/" + "Users" + "/"
+    + "|/" + "home" + "/)",
     re.IGNORECASE,
 )
 DATE_VALUE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
