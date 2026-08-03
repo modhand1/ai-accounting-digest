@@ -51,12 +51,17 @@ def sha256(path: Path) -> str:
 def safe_remote_url(url: str) -> str:
     """Удаляет возможные учётные данные из URL перед записью в манифест."""
     if "://" not in url:
-        return url
+        sanitized = url.split("?", 1)[0].split("#", 1)[0]
+        if re.match(r"^[^/\\]+@[^:]+:.+$", sanitized):
+            sanitized = sanitized.split("@", 1)[1]
+        return sanitized
     parts = urlsplit(url)
     host = parts.hostname or ""
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
     if parts.port:
         host = f"{host}:{parts.port}"
-    return urlunsplit((parts.scheme, host, parts.path, parts.query, parts.fragment))
+    return urlunsplit((parts.scheme, host, parts.path, "", ""))
 
 
 def assert_safe_locations(repo: Path, destination: Path) -> None:
@@ -121,8 +126,6 @@ def create_backup(
     git_executable: str,
     remote: str = "origin",
     branch: str = "main",
-    source_ref: str | None = None,
-    fetch: bool = True,
     force: bool = False,
     now: datetime | None = None,
 ) -> dict[str, str]:
@@ -131,10 +134,9 @@ def create_backup(
     assert_safe_locations(repo, destination)
     destination.mkdir(parents=True, exist_ok=True)
 
-    if fetch:
-        git(git_executable, repo, "fetch", "--prune", remote, branch)
+    git(git_executable, repo, "fetch", "--prune", remote, branch)
 
-    ref = source_ref or f"refs/remotes/{remote}/{branch}"
+    ref = f"refs/remotes/{remote}/{branch}"
     commit_sha = git(git_executable, repo, "rev-parse", "--verify", ref)
     if not re.fullmatch(r"[0-9a-f]{40,64}", commit_sha):
         raise RuntimeError("Git вернул неожиданный идентификатор коммита")
@@ -264,8 +266,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--git", dest="git_executable", default=os.environ.get("GIT_EXECUTABLE", "git"))
     parser.add_argument("--remote", default="origin")
     parser.add_argument("--branch", default="main")
-    parser.add_argument("--source-ref")
-    parser.add_argument("--no-fetch", action="store_true")
     parser.add_argument("--force", action="store_true")
     return parser
 
@@ -279,8 +279,6 @@ def main() -> int:
             git_executable=args.git_executable,
             remote=args.remote,
             branch=args.branch,
-            source_ref=args.source_ref,
-            fetch=not args.no_fetch,
             force=args.force,
         )
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
