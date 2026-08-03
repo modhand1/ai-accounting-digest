@@ -18,6 +18,46 @@
         </div>
         <p class="proof-line"><span></span>Практика • безопасность • профессиональный контроль</p>
     </div>
+    <div class="hero-circuit" aria-hidden="true">
+        <svg viewBox="760 0 680 800" preserveAspectRatio="none" focusable="false">
+            <defs>
+                <filter id="copper-glow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="3.5" result="blur"></feGaussianBlur>
+                    <feMerge>
+                        <feMergeNode in="blur"></feMergeNode>
+                        <feMergeNode in="SourceGraphic"></feMergeNode>
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <g class="circuit-tracks">
+                <path d="M1440 118H1225L1160 182H1005L930 258H810"></path>
+                <path d="M1440 248H1305L1232 321H1085L1018 388H855"></path>
+                <path d="M1440 410H1260L1185 335H1090"></path>
+                <path d="M1440 560H1310L1222 472H1125L1035 562H875"></path>
+                <path d="M1440 706H1250L1170 626H1010L930 546H820"></path>
+                <path d="M1180 0V92L1108 164V278L1048 338"></path>
+            </g>
+
+            <g class="circuit-pulses" filter="url(#copper-glow)">
+                <path class="circuit-pulse pulse-1" pathLength="100" d="M1440 118H1225L1160 182H1005L930 258H810"></path>
+                <path class="circuit-pulse pulse-2" pathLength="100" d="M1440 248H1305L1232 321H1085L1018 388H855"></path>
+                <path class="circuit-pulse pulse-3" pathLength="100" d="M1440 410H1260L1185 335H1090"></path>
+                <path class="circuit-pulse pulse-4" pathLength="100" d="M1440 560H1310L1222 472H1125L1035 562H875"></path>
+                <path class="circuit-pulse pulse-5" pathLength="100" d="M1440 706H1250L1170 626H1010L930 546H820"></path>
+                <path class="circuit-pulse pulse-6" pathLength="100" d="M1180 0V92L1108 164V278L1048 338"></path>
+            </g>
+
+            <g class="circuit-nodes">
+                <circle class="node-1" cx="1160" cy="182" r="4"></circle>
+                <circle class="node-2" cx="1232" cy="321" r="4"></circle>
+                <circle class="node-3" cx="1185" cy="335" r="4"></circle>
+                <circle class="node-4" cx="1222" cy="472" r="4"></circle>
+                <circle class="node-5" cx="1170" cy="626" r="4"></circle>
+                <circle class="node-6" cx="1108" cy="164" r="4"></circle>
+            </g>
+        </svg>
+    </div>
     <div class="hero-visual" data-reveal aria-hidden="true">
         <img src="{{ url_for('static', filename='images/hero-audit-lens.webp') }}" alt="" width="1536" height="1024">
     </div>
@@ -52,7 +92,7 @@
     <div class="materials-heading" data-reveal>
         <p class="section-signature">ИИ × БУХГАЛТЕР — ДАЙДЖЕСТ</p>
         <h2 id="materials-title">С чего начать<br>работу с <em>ИИ</em></h2>
-        <p>Девять материалов — от первого безопасного шага до проверяемого процесса.</p>
+        <p>Десять материалов — от первого безопасного шага до защитных ограничений.</p>
     </div>
 
     <div class="materials-grid">
@@ -95,36 +135,36 @@
 
 <section class="offers-section" aria-labelledby="offers-title">
     <div class="section-index">02</div>
-    <h2 id="offers-title" data-reveal>Если задача повторяется —<br>её можно <em>разобрать</em></h2>
+    <h2 id="offers-title" data-reveal>Примеры задач,<br>которые можно <em>разобрать</em></h2>
     <div class="offers-grid">
         <article data-reveal>
             <span>01</span>
-            <h3>Разбор одной задачи</h3>
-            <p>Выделим правила и контрольные равенства, покажем, где теряется время и где появляется риск.</p>
-            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+            <h3>Сверка данных перед отчётностью</h3>
+            <p>Понять, какие показатели сравнивать, где искать расхождения и чем подтвердить итог.</p>
+            <a href="#contact" data-example-link>Разобрать похожую задачу {{ arrow_icon() }}</a>
         </article>
         <article data-reveal>
             <span>02</span>
-            <h3>Практикум для команды</h3>
-            <p>Научимся ставить задачи, проверять результат и документировать процесс на безопасных примерах.</p>
-            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+            <h3>Проверка повторяющейся операции</h3>
+            <p>Разложить привычную проверку на правила, исключения и контрольные точки для бухгалтера.</p>
+            <a href="#contact" data-example-link>Разобрать похожую задачу {{ arrow_icon() }}</a>
         </article>
         <article data-reveal>
             <span>03</span>
-            <h3>Настройка воспроизводимого процесса</h3>
-            <p>Соберём рабочую систему с инструкциями, тестами, исключениями и понятным контролем.</p>
-            <a href="#contact">Узнать подробнее {{ arrow_icon() }}</a>
+            <h3>Подготовка понятного регламента</h3>
+            <p>Описать последовательность действий так, чтобы процесс можно было повторить и проверить.</p>
+            <a href="#contact" data-example-link>Разобрать похожую задачу {{ arrow_icon() }}</a>
         </article>
     </div>
 </section>
 
 <section class="contact-section" id="contact" aria-labelledby="contact-title">
     <div class="contact-copy" data-reveal>
-        <h2 id="contact-title">Начнём с задачи,<br>не с рабочих данных</h2>
-        <p>Опишите повторяющийся процесс обычными словами. Без файлов, реквизитов и конфиденциальных сведений.</p>
+        <h2 id="contact-title">Разложим задачу<br>по полочкам</h2>
+        <p>Ответьте коротко на шесть вопросов. Имя и контакты не нужны — только обезличенное описание рабочего процесса.</p>
         <div class="privacy-note" id="privacy">
             <strong>!</strong>
-            <span>Не прикладывайте рабочие файлы<br>и персональные данные.</span>
+            <span>Не прикладывайте рабочие файлы, персональные данные и сведения, составляющие коммерческую или иную охраняемую тайну.</span>
         </div>
     </div>
 
@@ -132,8 +172,8 @@
         {% if sent %}
         <div class="form-success" role="status">
             <span>✓</span>
-            <h3>Описание сохранено</h3>
-            <p>Заявка записана локально в <code>data/requests.csv</code>. Можно перейти к материалам или отправить ещё одну задачу.</p>
+            <h3>Описание задачи сохранено</h3>
+            <p>Сохранено только обезличенное описание — без имени и контактов. Можно перейти к материалам или описать ещё одну задачу.</p>
             <a class="button button-primary" href="#materials">Вернуться к материалам</a>
         </div>
         {% else %}
@@ -141,31 +181,54 @@
             {% if error %}
             <p class="form-error" role="alert">{{ error }}</p>
             {% endif %}
-            <label for="name">Имя</label>
-            <input id="name" name="name" type="text" maxlength="80" autocomplete="name" placeholder="Как к вам обращаться" required>
+            <div class="form-fields">
+                <div class="form-field form-field-wide">
+                    <label for="problem">1. Какую проблему хотите решить? <span aria-hidden="true">*</span></label>
+                    <textarea id="problem" name="problem" rows="3" minlength="15" maxlength="900" placeholder="Например: каждый месяц долго ищу расхождения между двумя отчётами" required></textarea>
+                </div>
 
-            <label for="task">Какую задачу хотите разобрать?</label>
-            <textarea id="task" name="task" rows="5" minlength="20" maxlength="1500" placeholder="Опишите повторяющийся процесс обычными словами" required></textarea>
-            <p class="char-counter"><span data-counter>0</span> / 1500</p>
+                <div class="form-field">
+                    <label for="current_process">2. Как выполняете задачу сейчас? <span aria-hidden="true">*</span></label>
+                    <textarea id="current_process" name="current_process" rows="4" minlength="15" maxlength="1200" placeholder="Коротко опишите последовательность действий" required></textarea>
+                </div>
 
-            <label for="format">Формат</label>
-            <select id="format" name="format" required>
-                <option value="" selected disabled>Выберите формат</option>
-                <option>Разбор одной задачи</option>
-                <option>Практикум для команды</option>
-                <option>Настройка процесса</option>
-                <option>Пока не знаю</option>
-            </select>
+                <div class="form-field">
+                    <label for="desired_result">3. Какой результат хотите получить? <span aria-hidden="true">*</span></label>
+                    <textarea id="desired_result" name="desired_result" rows="4" minlength="10" maxlength="900" placeholder="Что должно стать быстрее, понятнее или надёжнее" required></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label for="data_used">4. Какие данные обычно используете? <span aria-hidden="true">*</span></label>
+                    <textarea id="data_used" name="data_used" rows="3" minlength="5" maxlength="900" placeholder="Только виды данных: таблица, акт, выгрузка из 1С — без реальных значений" required></textarea>
+                </div>
+
+                <div class="form-field">
+                    <label for="frequency">5. Как часто задача повторяется? <span aria-hidden="true">*</span></label>
+                    <select id="frequency" name="frequency" required>
+                        <option value="" selected disabled>Выберите периодичность</option>
+                        <option>Каждый день</option>
+                        <option>Несколько раз в неделю</option>
+                        <option>Раз в месяц</option>
+                        <option>Раз в квартал</option>
+                        <option>Реже или по событию</option>
+                    </select>
+                </div>
+
+                <div class="form-field form-field-wide">
+                    <label for="current_check">6. Как сейчас проверяете результат? <span aria-hidden="true">*</span></label>
+                    <textarea id="current_check" name="current_check" rows="3" minlength="5" maxlength="900" placeholder="Например: сверяю итоговую сумму, контрольное равенство и выборочно проверяю строки" required></textarea>
+                </div>
+            </div>
 
             <label class="checkbox-row">
                 <input type="checkbox" name="privacy" value="yes" required>
-                <span>Я не добавляю рабочие файлы, реквизиты и персональные данные.</span>
+                <span>Я не добавляю рабочие файлы, реквизиты, персональные данные, коммерческую, банковскую, налоговую или иную охраняемую законом тайну.</span>
             </label>
 
             <button class="button button-primary" type="submit">
-                Отправить описание {{ arrow_icon() }}
+                Отправить на разбор {{ arrow_icon() }}
             </button>
-            <p class="form-hint"><strong>!</strong> Данные сохраняются локально на сервере сайта.</p>
+            <p class="form-hint"><strong>!</strong> Имя и контакты не запрашиваются. Сохраняется только обезличенное описание задачи.</p>
         </form>
         {% endif %}
     </div>

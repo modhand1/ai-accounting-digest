@@ -1,5 +1,6 @@
 """Небольшие проверки основных страниц и формы."""
 
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,16 +19,46 @@ class SiteTestCase(unittest.TestCase):
         self.temp_dir.cleanup()
 
     def test_home_and_all_materials_open(self):
-        self.assertEqual(self.client.get("/").status_code, 200)
+        home_response = self.client.get("/")
+        self.assertEqual(home_response.status_code, 200)
+        home_html = home_response.get_data(as_text=True)
+        self.assertIn(
+            "коммерческую или иную охраняемую тайну",
+            home_html,
+        )
+        self.assertIn("Какую проблему хотите решить?", home_html)
+        self.assertNotIn('name="name"', home_html)
         for item in app_module.MATERIALS:
             response = self.client.get(f"/material/{item['slug']}")
             self.assertEqual(response.status_code, 200)
+            self.assertIn("Морозова Юлия", response.get_data(as_text=True))
 
     def test_about_page_shows_verified_experience(self):
         response = self.client.get("/about")
         self.assertEqual(response.status_code, 200)
         self.assertIn("20 лет", response.get_data(as_text=True))
         self.assertIn("about-practitioner-open.jpg", response.get_data(as_text=True))
+
+    def test_material_catalog_has_ten_unique_items(self):
+        numbers = [item["number"] for item in app_module.MATERIALS]
+        slugs = [item["slug"] for item in app_module.MATERIALS]
+
+        self.assertEqual(len(app_module.MATERIALS), 10)
+        self.assertEqual(len(numbers), len(set(numbers)))
+        self.assertEqual(len(slugs), len(set(slugs)))
+        self.assertEqual(numbers, [f"{number:02d}" for number in range(1, 11)])
+
+    def test_material_ten_opens(self):
+        material_ten = next(
+            item for item in app_module.MATERIALS if item["number"] == "10"
+        )
+        response = self.client.get(f"/material/{material_ten['slug']}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Как задать ИИ границы",
+            response.get_data(as_text=True),
+        )
 
     def test_unknown_material_returns_404(self):
         self.assertEqual(self.client.get("/material/net-takogo").status_code, 404)
@@ -51,14 +82,43 @@ class SiteTestCase(unittest.TestCase):
         response = self.client.post(
             "/request",
             data={
-                "name": "Тест",
-                "task": "Повторяющаяся синтетическая задача для проверки формы.",
-                "format": "Разбор одной задачи",
+                "problem": "Каждый месяц долго ищу расхождения между отчётами.",
+                "current_process": "Вручную открываю две таблицы и сравниваю строки.",
+                "desired_result": "Получить понятный порядок проверки расхождений.",
+                "data_used": "Две обезличенные таблицы и итоговый отчёт.",
+                "frequency": "Раз в месяц",
+                "current_check": "Сверяю итоговые суммы и несколько строк выборочно.",
                 "privacy": "yes",
             },
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(app_module.REQUESTS_FILE.exists())
+        saved_text = app_module.REQUESTS_FILE.read_text(encoding="utf-8-sig")
+        self.assertIn("Проблема", saved_text)
+        self.assertNotIn("Имя", saved_text)
+
+    def test_request_text_cannot_become_csv_formula(self):
+        response = self.client.post(
+            "/request",
+            data={
+                "problem": "=WEBSERVICE(\"https://example.invalid\") и комментарий",
+                "current_process": "Вручную открываю две таблицы и сравниваю строки.",
+                "desired_result": "Получить понятный порядок проверки расхождений.",
+                "data_used": "Две обезличенные таблицы и итоговый отчёт.",
+                "frequency": "Раз в месяц",
+                "current_check": "Сверяю итоговые суммы и несколько строк выборочно.",
+                "privacy": "yes",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        with app_module.REQUESTS_FILE.open(
+            newline="", encoding="utf-8-sig"
+        ) as csv_file:
+            rows = list(csv.reader(csv_file))
+
+        self.assertTrue(rows[1][1].startswith("'="))
+        self.assertFalse(rows[1][1].startswith("="))
 
 
 if __name__ == "__main__":

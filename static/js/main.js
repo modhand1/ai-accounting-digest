@@ -44,16 +44,17 @@ document.addEventListener("DOMContentLoaded", () => {
         revealItems.forEach((item) => revealObserver.observe(item));
     }
 
-    const taskField = document.querySelector("#task");
-    const counter = document.querySelector("[data-counter]");
+    const problemField = document.querySelector("#problem");
+    const exampleLinks = document.querySelectorAll("[data-example-link]");
 
-    if (taskField && counter) {
-        const updateCounter = () => {
-            counter.textContent = String(taskField.value.length);
-        };
-
-        taskField.addEventListener("input", updateCounter);
-        updateCounter();
+    if (problemField && exampleLinks.length) {
+        exampleLinks.forEach((link) => {
+            link.addEventListener("click", () => {
+                window.requestAnimationFrame(() => {
+                    problemField.focus({ preventScroll: true });
+                });
+            });
+        });
     }
 
     const readingProgress = document.querySelector("[data-reading-progress]");
@@ -68,4 +69,30 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener("scroll", updateReadingProgress, { passive: true });
         updateReadingProgress();
     }
+
+    const copyPromptButtons = document.querySelectorAll("[data-copy-prompt]");
+
+    copyPromptButtons.forEach((button) => {
+        const defaultLabel = button.textContent;
+
+        button.addEventListener("click", async () => {
+            const prompt = button.closest(".article-prompt")?.querySelector("code");
+            if (!prompt) return;
+
+            try {
+                await navigator.clipboard.writeText(prompt.textContent.trim());
+                button.textContent = defaultLabel.toLowerCase().includes("пример")
+                    ? "Пример скопирован"
+                    : "Запрос скопирован";
+                button.classList.add("is-copied");
+
+                window.setTimeout(() => {
+                    button.textContent = defaultLabel;
+                    button.classList.remove("is-copied");
+                }, 2200);
+            } catch (error) {
+                button.textContent = "Выделите текст вручную";
+            }
+        });
+    });
 });
