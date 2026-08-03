@@ -9,7 +9,6 @@ from pathlib import Path
 
 
 MAX_FILE_SIZE = 5 * 1024 * 1024
-ALLOW_MARKER = "public-scan: allow"
 FORBIDDEN_DIRECTORY_NAMES = {
     ".backup",
     "backups",
@@ -45,13 +44,15 @@ KNOWN_BINARY_SUFFIXES = {
     ".webp",
 }
 
+USER_PATH_PATTERN = re.compile(
+    r"(?i)(?:[A-Z]:[\\/]" + "Users" + r"[\\/](?!\.{3}|<)[^\\/\r\n]+[\\/]"
+    + "|/" + "Users" + r"/(?!\.{3}|<)[^/\r\n]+/"
+    + "|/" + "home" + r"/(?!\.{3}|<)[^/\r\n]+/)"
+)
+
 SENSITIVE_PATTERNS = (
     (
-        re.compile(
-            r"(?i)(?:[A-Z]:[\\/]Users[\\/](?!\.{3}|<)[^\\/\r\n]+[\\/]"  # public-scan: allow
-            r"|/Users/(?!\.{3}|<)[^/\r\n]+/"  # public-scan: allow
-            r"|/home/(?!\.{3}|<)[^/\r\n]+/)"  # public-scan: allow
-        ),
+        USER_PATH_PATTERN,
         "абсолютный пользовательский путь",
     ),
     (
@@ -130,9 +131,6 @@ def validate_file(root: Path, path: Path) -> list[str]:
         match = pattern.search(text)
         if match:
             line = text.count("\n", 0, match.start()) + 1
-            matched_line = text.splitlines()[line - 1]
-            if ALLOW_MARKER in matched_line:
-                continue
             errors.append(f"{relative_text}:{line}: найден {description}")
 
     return errors
