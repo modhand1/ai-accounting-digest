@@ -114,17 +114,7 @@ def read_public_remote_url(repo: Path, remote: str) -> str:
     if not url or any(character in url for character in "\r\n\0"):
         raise ValueError(f"Не найден безопасный URL remote {remote}")
 
-    if re.match(r"^[A-Za-z]:[\\/]", url) or url.startswith(("/", "\\\\")):
-        local_path = Path(url).resolve()
-        if not local_path.exists():
-            raise ValueError("Локальный Git-источник не существует")
-        return str(local_path)
-
     parts = urlsplit(url)
-    if parts.scheme == "file":
-        if parts.username or parts.password or parts.query or parts.fragment:
-            raise ValueError("Локальный Git URL содержит лишние данные")
-        return url
     if parts.scheme != "https" or not parts.hostname:
         raise ValueError("Для резервной копии разрешён только публичный HTTPS remote")
     if parts.username or parts.password or parts.query or parts.fragment:
