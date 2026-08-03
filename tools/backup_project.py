@@ -23,12 +23,18 @@ STATE_FILENAME = ".backup-state.json"
 
 def git_environment() -> dict[str, str]:
     """Не позволяет внешним Git-конфигам менять поведение резервной копии."""
-    environment = os.environ.copy()
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.upper().startswith("GIT_")
+    }
     environment.update(
         {
             "GIT_CONFIG_NOSYSTEM": "1",
             "GIT_CONFIG_GLOBAL": os.devnull,
             "GIT_TERMINAL_PROMPT": "0",
+            "GIT_ASKPASS": "",
+            "SSH_ASKPASS": "",
         }
     )
     return environment
